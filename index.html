@@ -262,27 +262,31 @@ function createSparkles(){
 
 }
 
-function fadeOutMusic(audio, duration = 1000) {
-  let volume = audio.volume;
-  const step = volume / (duration / 50);
+function fadeOutMusic(audio, duration = 1200){
 
-  const fade = setInterval(() => {
-    volume -= step;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)()
+  const source = ctx.createMediaElementSource(audio)
+  const gainNode = ctx.createGain()
 
-    if (volume <= 0) {
-      audio.volume = 0;
-      audio.pause();
-      audio.currentTime = 0;
-      clearInterval(fade);
-    } else {
-      audio.volume = volume;
-    }
-  }, 50);
+  source.connect(gainNode)
+  gainNode.connect(ctx.destination)
+
+  const now = ctx.currentTime
+
+  gainNode.gain.setValueAtTime(audio.volume, now)
+  gainNode.gain.linearRampToValueAtTime(0, now + duration/1000)
+
+  setTimeout(()=>{
+    audio.pause()
+    audio.currentTime = 0
+  }, duration)
+
 }
 
 function openInvite(){
  document.body.classList.add("open")
  music.muted=false
+ music.volume = 0.8
  music.play().catch(()=>{})
 
  setTimeout(()=>{
